@@ -259,23 +259,6 @@ async function removeFromWishlist(courseId) {
 // FRONTEND DISPLAY FUNCTIONS
 // ============================================
 
-// Initialize the page
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('✓ DOMContentLoaded fired');
-    
-    // Only display courses if coursesGrid element exists (not on admin dashboard)
-    const coursesGrid = document.getElementById('coursesGrid');
-    if (coursesGrid) {
-        console.log('Starting displayCourses...');
-        await displayCourses('all');
-        console.log('✓ displayCourses completed');
-    }
-    
-    console.log('Setting up event listeners...');
-    setupEventListeners();
-    console.log('✓ Event listeners setup complete');
-});
-
 // Display Courses
 async function displayCourses(filter = 'all') {
     const coursesGrid = document.getElementById('coursesGrid');

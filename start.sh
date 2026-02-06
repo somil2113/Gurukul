@@ -57,7 +57,7 @@ fi
 echo ""
 
 # Navigate to backend directory
-cd /Users/mall/Documents/gurukul/edtech-backend
+cd edtech-backend
 
 # Install dependencies if needed
 echo -e "${YELLOW}2️⃣  Checking backend dependencies...${NC}"
@@ -69,8 +69,8 @@ echo -e "${GREEN}✅ Dependencies ready${NC}"
 echo ""
 
 # Seed database
-echo -e "${YELLOW}3️⃣  Seeding database with 12 courses...${NC}"
-npm run seed > logs/seed.log 2>&1
+echo -e "${YELLOW}3️⃣  Seeding database with all courses...${NC}"
+npm run seed > ../logs/seed.log 2>&1
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Database seeded${NC}"
 else
@@ -80,13 +80,13 @@ echo ""
 
 # Start Backend Server
 echo -e "${YELLOW}4️⃣  Starting Backend Server...${NC}"
-npm run dev > logs/backend.log 2>&1 &
+npm run dev > ../logs/backend.log 2>&1 &
 BACKEND_PID=$!
 sleep 3
 
 # Check if backend is running
-if curl -s http://localhost:5000/api/health > /dev/null 2>&1; then
-    echo -e "${GREEN}✅ Backend started on port 5000${NC}"
+if curl -s http://localhost:5001/api/health > /dev/null 2>&1; then
+    echo -e "${GREEN}✅ Backend started on port 5001${NC}"
 else
     echo -e "${RED}❌ Backend failed to start. Check logs/backend.log${NC}"
     cat logs/backend.log
@@ -101,12 +101,12 @@ echo -e "${GREEN}═════════════════════
 echo ""
 echo "📊 Service Status:"
 echo -e "  ${GREEN}✓${NC} MongoDB:  http://localhost:27017"
-echo -e "  ${GREEN}✓${NC} Backend:  http://localhost:5000"
+echo -e "  ${GREEN}✓${NC} Backend:  http://localhost:5001"
 echo -e "  ${GREEN}✓${NC} Website:  Open index.html with Live Server"
 echo ""
 echo "🧪 Quick Test Commands:"
-echo "  curl http://localhost:5000/api/health"
-echo "  curl http://localhost:5000/api/courses"
+echo "  curl http://localhost:5001/api/health"
+echo "  curl http://localhost:5001/api/courses"
 echo ""
 echo "📋 Log Files:"
 echo "  MongoDB: logs/mongodb.log"
