@@ -105,6 +105,7 @@ async function fetchUserProfile() {
 // ============================================
 
 // Global pagination state
+let courses = [];
 let currentPage = 1;
 const coursesPerPage = 10;
 
