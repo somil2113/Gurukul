@@ -3,15 +3,25 @@ const Course = require('../models/Course');
 // Get all courses
 exports.getAllCourses = async (req, res) => {
     try {
-        const { category } = req.query;
+        const { category, page = 1, limit = 10 } = req.query;
         
         let filter = {};
-        if (category) {
+        if (category && category !== 'all') {
             filter.category = category;
         }
 
-        const courses = await Course.find(filter);
-        res.json(courses);
+        const count = await Course.countDocuments(filter);
+        const courses = await Course.find(filter)
+            .limit(limit * 1)
+            .skip((page - 1) * limit)
+            .exec();
+
+        res.json({
+            courses,
+            totalPages: Math.ceil(count / limit),
+            currentPage: Number(page),
+            totalCourses: count
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

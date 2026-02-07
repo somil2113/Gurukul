@@ -245,12 +245,12 @@
         }
 
         // Setup filter buttons
-        function setupFilterButtons(coursesData) {
+        function setupFilterButtons() {
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    displayCourses(coursesData, this.dataset.filter);
+                    displayCourses(this.dataset.filter, 1);
                 });
             });
         }
@@ -321,38 +321,11 @@
 
             // Fetch and display courses from API
             console.log('Fetching courses from API...');
-            try {
-                const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE_URL) ? CONFIG.API_BASE_URL : 'http://localhost:5001/api';
-                const apiUrl = `${baseUrl}/courses`;
-                console.log('API URL:', apiUrl);
-                
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    mode: 'cors',
-                    credentials: 'omit'
-                });
-                
-                console.log('API Response status:', response.status);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const coursesData = await response.json();
-                console.log(`Loaded ${coursesData.length} courses`);
-                
-                window.allCourses = coursesData;
-                displayCourses(coursesData, 'all');
-                setupFilterButtons(coursesData);
-                setupEventListeners();
-            } catch (error) {
-                console.error('Error loading courses:', error);
-                const coursesGrid = document.getElementById('coursesGrid');
-                if (coursesGrid) {
-                    coursesGrid.innerHTML = `<p style="color: red; text-align: center; grid-column: 1/-1;">Error loading courses: ${error.message}</p>`;
-                }
-            }
+            
+            // Initial load using the new pagination-aware displayCourses from script-api.js
+            await displayCourses('all', 1);
+            setupFilterButtons();
+            setupEventListeners();
         });
     </script>
 </body>

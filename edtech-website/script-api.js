@@ -104,13 +104,15 @@ async function fetchUserProfile() {
 // COURSE FUNCTIONS
 // ============================================
 
-let courses = [];
+// Global pagination state
+let currentPage = 1;
+const coursesPerPage = 10;
 
-async function fetchCourses(category = 'all') {
+async function fetchCourses(category = 'all', page = 1) {
     try {
-        let url = `${API_URL}/courses`;
+        let url = `${API_URL}/courses?page=${page}&limit=${coursesPerPage}`;
         if (category && category !== 'all') {
-            url += `?category=${category}`;
+            url += `&category=${category}`;
         }
         
         console.log(`Fetching courses from: ${url}`);
@@ -119,12 +121,20 @@ async function fetchCourses(category = 'all') {
         
         if (!response.ok) throw new Error('Failed to fetch courses');
         
-        courses = await response.json();
-        console.log(`✓ Fetched ${courses.length} courses`);
-        return courses;
+        const data = await response.json();
+        
+        // Handle backward compatibility or different response structures
+        if (Array.isArray(data)) {
+            courses = data;
+            return { courses: data, totalPages: 1, currentPage: 1 };
+        }
+        
+        courses = data.courses;
+        console.log(`✓ Fetched ${courses ? courses.length : 0} courses`);
+        return data; // returns { courses, totalPages, currentPage, totalCourses }
     } catch (error) {
         console.error('✗ Error fetching courses:', error);
-        return [];
+        return { courses: [], totalPages: 0, currentPage: 1 };
     }
 }
 
@@ -283,40 +293,68 @@ async function removeFromWishlist(courseId) {
 // ============================================
 
 // Display Courses
-async function displayCourses(filter = 'all') {
+async function displayCourses(filter = 'all', page = 1) {
     const coursesGrid = document.getElementById('coursesGrid');
-    console.log(`displayCourses called with filter: ${filter}`);
-    console.log(`coursesGrid element found: ${coursesGrid !== null}`);
     
     if (!coursesGrid) {
         console.error('✗ coursesGrid element not found!');
         return;
     }
     
-    coursesGrid.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Loading courses...</p>';
+    coursesGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;"><div class="spinner"></div><p style="color: var(--text-secondary); margin-top: 1rem;">Loading courses...</p></div>';
     
     // Fetch courses from API
-    console.log('Calling fetchCourses...');
-    const fetchedCourses = await fetchCourses(filter);
-    console.log(`Received ${fetchedCourses.length} courses from API`);
+    const data = await fetchCourses(filter, page);
+    const coursesList = data.courses || [];
+    const totalPages = data.totalPages || 1;
+    currentPage = data.currentPage || 1;
     
-    courses = fetchedCourses;
-    
+    courses = coursesList;
     coursesGrid.innerHTML = '';
 
-    if (courses.length === 0) {
+    if (coursesList.length === 0) {
         console.warn('⚠️ No courses found');
-        coursesGrid.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No courses found</p>';
+        coursesGrid.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">No courses found</p>';
+        updatePagination(0, 0, filter);
         return;
     }
 
-    console.log(`Rendering ${courses.length} course cards...`);
-    courses.forEach(course => {
+    console.log(`Rendering ${coursesList.length} course cards...`);
+    coursesList.forEach(course => {
         const courseCard = createCourseCard(course);
         coursesGrid.appendChild(courseCard);
     });
     
-    console.log(`✓ Successfully displayed ${courses.length} courses`);
+    updatePagination(totalPages, currentPage, filter);
+    console.log(`✓ Successfully displayed ${coursesList.length} courses`);
+}
+
+function updatePagination(totalPages, currentPage, filter) {
+    let paginationContainer = document.getElementById('pagination-container');
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'pagination-container';
+        paginationContainer.className = 'pagination';
+        const grid = document.getElementById('coursesGrid');
+        if (grid && grid.parentNode) {
+            grid.parentNode.insertBefore(paginationContainer, grid.nextSibling);
+        }
+    }
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    paginationContainer.innerHTML = `
+        <button ${currentPage <= 1 ? 'disabled' : ''} onclick="displayCourses('${filter}', ${currentPage - 1})">
+            &lt; Previous
+        </button>
+        <span class="page-info">Page ${currentPage} of ${totalPages}</span>
+        <button ${currentPage >= totalPages ? 'disabled' : ''} onclick="displayCourses('${filter}', ${currentPage + 1})">
+             Next &gt;
+        </button>
+    `;
 }
 
 // Create Course Card
