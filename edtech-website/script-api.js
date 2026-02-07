@@ -294,8 +294,15 @@ async function removeFromWishlist(courseId) {
 // ============================================
 
 // Display Courses
-async function displayCourses(filter = 'all', page = 1) {
+async function displayCourses(filter = 'all', page = 1, shouldScroll = false) {
     const coursesGrid = document.getElementById('coursesGrid');
+    
+    if (shouldScroll) {
+        const target = document.getElementById('courses') || coursesGrid;
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
     
     if (!coursesGrid) {
         console.error('✗ coursesGrid element not found!');
@@ -348,11 +355,11 @@ function updatePagination(totalPages, currentPage, filter) {
     }
 
     paginationContainer.innerHTML = `
-        <button ${currentPage <= 1 ? 'disabled' : ''} onclick="displayCourses('${filter}', ${currentPage - 1})">
+        <button ${currentPage <= 1 ? 'disabled' : ''} onclick="displayCourses('${filter}', ${currentPage - 1}, true)">
             &lt; Previous
         </button>
         <span class="page-info">Page ${currentPage} of ${totalPages}</span>
-        <button ${currentPage >= totalPages ? 'disabled' : ''} onclick="displayCourses('${filter}', ${currentPage + 1})">
+        <button ${currentPage >= totalPages ? 'disabled' : ''} onclick="displayCourses('${filter}', ${currentPage + 1}, true)">
              Next &gt;
         </button>
     `;
