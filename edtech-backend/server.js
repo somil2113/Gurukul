@@ -11,9 +11,46 @@ const userRoutes = require('./routes/users');
 
 const app = express();
 
+const normalizeOrigin = (value = '') => value.trim().replace(/\/$/, '');
+
+const configuredOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((origin) => normalizeOrigin(origin))
+    .filter(Boolean);
+
+const defaultOrigins = [
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+    'http://localhost:3000',
+    'https://gurukul-lyart.vercel.app',
+    'https://www.gurukul-lyart.vercel.app',
+    'https://*.vercel.app'
+];
+
+const allowedOrigins = [...new Set([...configuredOrigins, ...defaultOrigins])];
+
+const isAllowedOrigin = (requestOrigin) => {
+    const origin = normalizeOrigin(requestOrigin);
+    if (!origin) return true;
+
+    return allowedOrigins.some((allowed) => {
+        if (allowed === '*') return true;
+        if (allowed.includes('*')) {
+            const pattern = `^${allowed.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`;
+            return new RegExp(pattern).test(origin);
+        }
+        return allowed === origin;
+    });
+};
+
 // Middleware
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*', // Use env variable or default to *
+    origin: (origin, callback) => {
+        if (isAllowedOrigin(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
     credentials: false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
